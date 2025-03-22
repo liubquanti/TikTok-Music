@@ -5,9 +5,17 @@ import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';  // Updated import
 import 'dart:io';
 import 'models/tiktok.dart';
 import 'player.dart';
+import 'package:provider/provider.dart';
+import 'providers/audio.dart';
+import 'widgets/miniplayer.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AudioProvider(),
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -31,21 +39,35 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoTabScaffold(
       tabBar: CupertinoTabBar(
+        height: 60,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.cloud_download),
-            label: 'Download',
+        icon: Icon(CupertinoIcons.cloud_download),
+        label: 'Download',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.music_note),
-            label: 'Player',
+        icon: Icon(CupertinoIcons.music_note),
+        label: 'Player',
           ),
         ],
       ),
       tabBuilder: (context, index) {
-        return index == 0
-            ? const DownloaderScreen()
-            : const PlayerScreen();
+        return SafeArea(
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 60), // Add space for miniplayer
+                child: index == 0
+                    ? const DownloaderScreen()
+                    : const PlayerScreen(),
+              ),
+              const Align(
+                alignment: Alignment.bottomCenter,
+                child: MiniPlayer(),
+              ),
+            ],
+          ),
+        );
       },
     );
   }

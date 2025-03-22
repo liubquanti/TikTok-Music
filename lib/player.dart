@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 import 'handles/manager.dart';
+import 'package:provider/provider.dart';
+import '/providers/audio.dart';
 
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({super.key});
@@ -11,27 +12,17 @@ class PlayerScreen extends StatefulWidget {
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
   List<File> _audioFiles = [];
-  File? _currentFile;
-  bool _isPlaying = false;
   bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     _loadAudioFiles();
-    _setupAudioPlayerListeners();
   }
 
-  void _setupAudioPlayerListeners() {
-    _audioPlayer.playerStateStream.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state.playing;
-        });
-      }
-    });
+  Future<void> _playAudio(File file, AudioProvider audioProvider) async {
+    await audioProvider.playFile(file);
   }
 
   Future<void> _loadAudioFiles() async {
@@ -40,27 +31,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
       setState(() {
         _audioFiles = files;
       });
-    }
-  }
-
-  Future<void> _playAudio(File file) async {
-    if (_currentFile?.path == file.path && _isPlaying) {
-      await _audioPlayer.pause();
-    } else {
-      await _audioPlayer.setFilePath(file.path);
-      await _audioPlayer.play();
-      setState(() {
-        _currentFile = file;
-      });
+      // Update playlist in AudioProvider
+      Provider.of<AudioProvider>(context, listen: false).setPlaylist(files);
     }
   }
 
   Future<void> _deleteAudio(File file) async {
-    if (_currentFile?.path == file.path) {
-      await _audioPlayer.stop();
-      setState(() {
-        _currentFile = null;
-      });
+    final audioProvider = Provider.of<AudioProvider>(context, listen: false);
+    if (audioProvider.currentFile?.path == file.path) {
+      await audioProvider.audioPlayer.stop();
+      audioProvider.clearCurrentTrack();  // Use new method
     }
     await file.delete();
     _loadAudioFiles();
@@ -84,6 +64,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final audioProvider = Provider.of<AudioProvider>(context, listen: false);
+    
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Music Player'),
@@ -95,56 +77,50 @@ class _PlayerScreenState extends State<PlayerScreen> {
           onPressed: _isRefreshing ? null : _refreshAudioFiles,
         ),
       ),
-      child: SafeArea(
-        child: _audioFiles.isEmpty
-            ? const Center(
-                child: Text('No audio files found'),
-              )
-            : ListView.builder(
-                itemCount: _audioFiles.length,
-                itemBuilder: (context, index) {
-                  final file = _audioFiles[index];
-                  final isPlaying = 
-                      _currentFile?.path == file.path && _isPlaying;
-                  
-                  return Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: CupertinoColors.systemGrey5,
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
-                    child: CupertinoListTile(
-                      leading: Icon(
-                        isPlaying
-                            ? CupertinoIcons.pause_circle_fill
-                            : CupertinoIcons.play_circle_fill,
-                        color: CupertinoColors.systemPink,
-                        size: 30,
-                      ),
-                      title: Text(_getFileName(file.path)),
-                      trailing: CupertinoButton(
-                        padding: EdgeInsets.zero,
-                        child: const Icon(
-                          CupertinoIcons.delete,
-                          color: CupertinoColors.systemRed,
-                        ),
-                        onPressed: () => _deleteAudio(file),
-                      ),
-                      onTap: () => _playAudio(file),
-                    ),
-                  );
-                },
+      child: ListView.builder(
+        itemCount: _audioFiles.length,
+        itemBuilder: (context, index) {
+          final file = _audioFiles[index];
+          final isPlaying = 
+              audioProvider.currentFile?.path == file.path && 
+              audioProvider.isPlaying;
+          
+          return Container(
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: CupertinoColors.systemGrey5,
+                  width: 0.5,
+                ),
               ),
+            ),
+            child: CupertinoListTile(
+              leading: Icon(
+                isPlaying
+                    ? CupertinoIcons.pause_circle_fill
+                    : CupertinoIcons.play_circle_fill,
+                color: CupertinoColors.systemPink,
+                size: 30,
+              ),
+              title: Text(_getFileName(file.path)),
+              trailing: CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: const Icon(
+                  CupertinoIcons.delete,
+                  color: CupertinoColors.systemRed,
+                ),
+                onPressed: () => _deleteAudio(file),
+              ),
+              onTap: () => _playAudio(file, audioProvider),
+            ),
+          );
+        },
       ),
     );
   }
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
     super.dispose();
   }
 }

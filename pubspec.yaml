@@ -16,6 +16,7 @@ dependencies:
   gallery_saver: ^2.3.2
   ffmpeg_kit_flutter_full_gpl: ^6.0.3  # Use this instead of ffmpeg_kit_flutter
   just_audio: ^0.9.36
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:

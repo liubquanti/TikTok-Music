@@ -8,20 +8,30 @@ import '../handles/audio.dart';
 class AudioProvider extends ChangeNotifier {
   final MyAudioHandler audioHandler;
   final List<File> _playlist = [];
-  int _currentIndex = -1;
+  int? _currentIndex = -1;
   bool _isShuffled = false;
   RepeatMode _repeatMode = RepeatMode.off;
 
   AudioProvider({required this.audioHandler}) {
+    // Listen to playback state changes
     audioHandler.playbackState.listen((state) {
       notifyListeners();
+    });
+    
+    // Listen to current index changes from the audio handler
+    audioHandler.currentIndexNotifier.addListener(() {
+      if (audioHandler.currentIndexNotifier.value != null) {
+        _currentIndex = audioHandler.currentIndexNotifier.value;
+        notifyListeners();
+      }
     });
   }
 
   AudioPlayer get audioPlayer => audioHandler.player;
-  File? get currentFile => _currentIndex >= 0 && _currentIndex < _playlist.length 
-      ? _playlist[_currentIndex] 
-      : null;
+  
+  File? get currentFile => _currentIndex != null && _currentIndex! >= 0 && 
+      _currentIndex! < _playlist.length ? _playlist[_currentIndex!] : null;
+  
   bool get isPlaying => audioPlayer.playing;
   bool get isShuffled => _isShuffled;
   RepeatMode get repeatMode => _repeatMode;
@@ -54,8 +64,8 @@ class AudioProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Add method to check if file is current
   bool isCurrentTrack(File file) {
+    if (_currentIndex == null || currentFile == null) return false;
     return currentFile?.path == file.path;
   }
 

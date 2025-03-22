@@ -3,16 +3,20 @@ import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
-class MyAudioHandler extends BaseAudioHandler with SeekHandler {
+class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   final AudioPlayer player = AudioPlayer();
   final List<MediaItem> _playlist = [];
   ConcatenatingAudioSource? _audioSource;
+  ValueNotifier<int?> currentIndexNotifier = ValueNotifier<int?>(null);
 
   MyAudioHandler() {
     _init();
   }
 
   Future<void> _init() async {
+    // Configure player
+    player.setLoopMode(LoopMode.off);
+    
     // Listen to playback events
     player.playbackEventStream.listen(_broadcastState);
     
@@ -26,6 +30,7 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
     
     // Listen to current index
     player.currentIndexStream.listen((index) {
+      currentIndexNotifier.value = index;
       if (index != null && _playlist.isNotEmpty && index < _playlist.length) {
         mediaItem.add(_playlist[index]);
       }
@@ -166,44 +171,21 @@ class MyAudioHandler extends BaseAudioHandler with SeekHandler {
 
   Future<void> playFromFile(File file) async {
     try {
-      // Get the file duration (this requires temporarily setting the file)
-      final tempPlayer = AudioPlayer();
-      final duration = await tempPlayer.setFilePath(file.path);
-      await tempPlayer.dispose();
-      
-      final name = file.path.split('/').last.replaceAll('.m4a', '');
-      final item = MediaItem(
-        id: file.path,
-        title: name,
-        duration: duration,
-        artUri: Uri.file('${file.parent.path}/assets/default_art.png'),
-        playable: true,
-      );
-      
-      mediaItem.add(item);
-      
-      // If we don't have a playlist yet, create one with only this file
-      if (_audioSource == null || _playlist.isEmpty) {
-        _playlist.clear();
-        _playlist.add(item);
-        
-        _audioSource = ConcatenatingAudioSource(
-          children: [AudioSource.uri(Uri.file(file.path))],
-        );
-        
-        await player.setAudioSource(_audioSource!);
-        queue.add(_playlist);
-      } else {
-        // Find file in existing playlist
-        final index = _playlist.indexWhere((i) => i.id == file.path);
-        if (index != -1) {
-          await player.seek(Duration.zero, index: index);
-        }
+      if (_audioSource == null) {
+        // If there's no playlist yet, set up the audio source
+        await setFiles([file]);
       }
       
-      await play();
+      // Find index of the file in current playlist
+      final index = _playlist.indexWhere((item) => item.id == file.path);
+      if (index != -1) {
+        await player.seek(Duration.zero, index: index);
+        currentIndexNotifier.value = index;
+        await play();
+        mediaItem.add(_playlist[index]);
+      }
     } catch (e) {
-      debugPrint('Error playing file: $e');
+      print('Error playing file: $e');
     }
   }
 

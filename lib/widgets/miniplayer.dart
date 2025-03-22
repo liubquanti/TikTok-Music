@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../providers/audio.dart';
+import '../enum/repeat.dart';
 
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
@@ -25,7 +26,7 @@ class MiniPlayer extends StatelessWidget {
         }
 
         return Container(
-          height: 100,
+          height: 90,
           decoration: BoxDecoration(
             color: CupertinoTheme.of(context).barBackgroundColor,
             border: const Border(
@@ -35,133 +36,144 @@ class MiniPlayer extends StatelessWidget {
               ),
             ),
           ),
-            child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          child: Column(
+            children: [
               // Timeline slider
               StreamBuilder<Duration>(
                 stream: audioProvider.audioPlayer.positionStream,
                 builder: (context, snapshot) {
-                final position = snapshot.data ?? Duration.zero;
-                final duration = audioProvider.duration;
-                
-                // Prevent division by zero and handle empty duration
-                if (duration.inSeconds == 0) {
-                  return const SizedBox(height: 20);
-                }
+                  final position = snapshot.data ?? Duration.zero;
+                  final duration = audioProvider.duration;
 
-                // Calculate normalized value between 0 and 1
-                final value = duration.inSeconds > 0 
-                  ? position.inSeconds / duration.inSeconds 
-                  : 0.0;
-                
-                return Row(
-                  children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Prevent division by zero and handle empty duration
+                  if (duration.inSeconds == 0) {
+                    return const SizedBox(height: 20);
+                  }
+
+                  // Calculate normalized value between 0 and 1
+                  final value = duration.inSeconds > 0
+                      ? position.inSeconds / duration.inSeconds
+                      : 0.0;
+
+                  return Row(
                     children: [
-                      Text(_formatDuration(position)),
-                    ],
-                    ),
-                  ),
-                  Spacer(),
-                  SizedBox(
-                    height: 40,
-                    child: Center(
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      child: CupertinoSlider(
-                      value: value.clamp(0.0, 1.0),
-                      onChanged: (value) {
-                      final newPosition = value * duration.inSeconds;
-                      audioProvider.seekTo(
-                        Duration(seconds: newPosition.toInt()),
-                      );
-                      },
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_formatDuration(position)),
+                          ],
+                        ),
                       ),
-                    ),
-                    ),
-                    
-                  ),
-                  Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_formatDuration(duration)),
+                      Spacer(),
+                      SizedBox(
+                        height: 40,
+                        child: Center(
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.5,
+                            child: CupertinoSlider(
+                              value: value.clamp(0.0, 1.0),
+                              onChanged: (value) {
+                                final newPosition = value * duration.inSeconds;
+                                audioProvider.seekTo(
+                                  Duration(seconds: newPosition.toInt()),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_formatDuration(duration)),
+                          ],
+                        ),
+                      ),
                     ],
-                    ),
-                  ),
-                  ],
-                );
+                  );
                 },
               ),
               // Controls
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
-                children: [
-                  Expanded(
-                  child: Text(
-                    _getFileName(audioProvider.currentFile!.path),
-                    style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  ),
-                  Row(
                   children: [
-                    CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: const Icon(
-                      CupertinoIcons.backward_fill,
-                      color: CupertinoColors.systemPink,
+                    Expanded(
+                      child: Text(
+                        _getFileName(audioProvider.currentFile!.path),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    onPressed: () => audioProvider.playPrevious(),
-                    ),
-                    CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: Icon(
-                      audioProvider.isPlaying
-                        ? CupertinoIcons.pause_fill
-                        : CupertinoIcons.play_fill,
-                      color: CupertinoColors.systemPink,
-                      size: 30,
-                    ),
-                    onPressed: () {
-                      if (audioProvider.isPlaying) {
-                      audioProvider.audioPlayer.pause();
-                      audioProvider.setIsPlaying(false);
-                      } else {
-                      audioProvider.audioPlayer.play();
-                      audioProvider.setIsPlaying(true);
-                      }
-                    },
-                    ),
-                    CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: const Icon(
-                      CupertinoIcons.forward_fill,
-                      color: CupertinoColors.systemPink,
-                    ),
-                    onPressed: () => audioProvider.playNext(),
+                    Row(
+                      children: [
+                        // Shuffle button
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          child: Icon(
+                            CupertinoIcons.shuffle,
+                            color: audioProvider.isShuffled
+                                ? CupertinoColors.systemPink
+                                : CupertinoColors.systemGrey,
+                          ),
+                          onPressed: () => audioProvider.toggleShuffle(),
+                        ),
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          child: const Icon(
+                            CupertinoIcons.backward_fill,
+                            color: CupertinoColors.systemPink,
+                          ),
+                          onPressed: () => audioProvider.playPrevious(),
+                        ),
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          child: Icon(
+                            audioProvider.isPlaying
+                                ? CupertinoIcons.pause_fill
+                                : CupertinoIcons.play_fill,
+                            color: CupertinoColors.systemPink,
+                            size: 30,
+                          ),
+                          onPressed: () => audioProvider.togglePlayPause(),
+                        ),
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          child: const Icon(
+                            CupertinoIcons.forward_fill,
+                            color: CupertinoColors.systemPink,
+                          ),
+                          onPressed: () => audioProvider.playNext(),
+                        ),
+                        // Repeat button
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          child: Icon(
+                            audioProvider.repeatMode == RepeatMode.one
+                                ? CupertinoIcons.repeat_1
+                                : CupertinoIcons.repeat,
+                            color: audioProvider.repeatMode != RepeatMode.off
+                                ? CupertinoColors.systemPink
+                                : CupertinoColors.systemGrey,
+                          ),
+                          onPressed: () => audioProvider.toggleRepeatMode(),
+                        ),
+                      ],
                     ),
                   ],
-                  ),
-                ],
                 ),
               ),
-              ],
-            ),
-            )
-          
+            ],
+          ),
         );
       },
     );

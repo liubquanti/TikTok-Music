@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:dio/dio.dart';
-import 'package:gallery_saver/gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';  // Updated import
 import 'dart:io';
 import 'models/tiktok.dart';
 
@@ -35,7 +35,7 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
   bool _isLoading = false;
   String _status = '';
 
-  Future<void> _downloadVideo() async {
+  Future<void> _downloadAndConvertToAudio() async {
     if (_urlController.text.isEmpty) {
       setState(() => _status = 'Please enter a TikTok URL');
       return;
@@ -62,11 +62,12 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
 
       final dio = Dio();
       final tempDir = await getTemporaryDirectory();
-      final savePath = '${tempDir.path}/tiktok_video.mp4';
+      final videoPath = '${tempDir.path}/tiktok_video.mp4';
+      final audioPath = '${tempDir.path}/tiktok_audio.m4a';
 
       await dio.download(
         tiktokInfo!.data!.play!,
-        savePath,
+        videoPath,
         onReceiveProgress: (received, total) {
           if (total != -1) {
             final progress = (received / total * 100).toStringAsFixed(0);
@@ -75,16 +76,28 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
         },
       );
 
-      setState(() => _status = 'Saving to gallery...');
+      setState(() => _status = 'Converting to audio...');
 
-      final success = await GallerySaver.saveVideo(savePath);
+      // Convert video to audio using FFmpeg
+      await FFmpegKit.execute(
+          '-i $videoPath -vn -acodec copy $audioPath'
+      );
+
+      setState(() => _status = 'Saving to Music...');
+
+      // Save to Music library
+      final documentsDir = await getApplicationDocumentsDirectory();
+      final finalAudioPath = '${documentsDir.path}/TikTok_Audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await File(audioPath).copy(finalAudioPath);
 
       setState(() {
         _isLoading = false;
-        _status = success == true ? 'Video saved to gallery!' : 'Failed to save video';
+        _status = 'Audio saved successfully to: $finalAudioPath';
       });
 
-      File(savePath).deleteSync();
+      // Clean up temporary files
+      File(videoPath).deleteSync();
+      File(audioPath).deleteSync();
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -97,7 +110,7 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        middle: Text('TikTok Downloader'),
+        middle: Text('TikTok Audio Downloader'),
       ),
       child: SafeArea(
         child: Padding(
@@ -116,8 +129,8 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
                 const CupertinoActivityIndicator(radius: 15)
               else
                 CupertinoButton.filled(
-                  onPressed: _downloadVideo,
-                  child: const Text('Download Video'),
+                  onPressed: _downloadAndConvertToAudio,
+                  child: const Text('Download Audio'),
                 ),
               const SizedBox(height: 20),
               Text(

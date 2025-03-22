@@ -1,4 +1,6 @@
 PODS:
+  - audio_session (0.0.1):
+    - Flutter
   - ffmpeg-kit-ios-full-gpl (6.0)
   - ffmpeg_kit_flutter_full_gpl (6.0.3):
     - ffmpeg_kit_flutter_full_gpl/full-gpl (= 6.0.3)
@@ -9,14 +11,19 @@ PODS:
   - Flutter (1.0.0)
   - gallery_saver (0.0.1):
     - Flutter
+  - just_audio (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
 
 DEPENDENCIES:
+  - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - ffmpeg_kit_flutter_full_gpl (from `.symlinks/plugins/ffmpeg_kit_flutter_full_gpl/ios`)
   - Flutter (from `Flutter`)
   - gallery_saver (from `.symlinks/plugins/gallery_saver/ios`)
+  - just_audio (from `.symlinks/plugins/just_audio/darwin`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
 
 SPEC REPOS:
@@ -24,20 +31,26 @@ SPEC REPOS:
     - ffmpeg-kit-ios-full-gpl
 
 EXTERNAL SOURCES:
+  audio_session:
+    :path: ".symlinks/plugins/audio_session/ios"
   ffmpeg_kit_flutter_full_gpl:
     :path: ".symlinks/plugins/ffmpeg_kit_flutter_full_gpl/ios"
   Flutter:
     :path: Flutter
   gallery_saver:
     :path: ".symlinks/plugins/gallery_saver/ios"
+  just_audio:
+    :path: ".symlinks/plugins/just_audio/darwin"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
+  audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
   ffmpeg-kit-ios-full-gpl: 78f81da9b8c14f62f5013dd90f0c9c80bd720140
   ffmpeg_kit_flutter_full_gpl: ce18b888487c05c46ed252cd2e7956812f2e3bd1
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   gallery_saver: 1d68d1818df11b1afa84a97d1a530463753e92e3
+  just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
 
 PODFILE CHECKSUM: 06e2d1868f6fe3068c5e2d902bc3a01001025d74

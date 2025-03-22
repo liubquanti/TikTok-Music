@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';  // Updated import
 import 'dart:io';
 import 'models/tiktok.dart';
+import 'player.dart';
 
 void main() {
   runApp(const MainApp());
@@ -18,7 +19,34 @@ class MainApp extends StatelessWidget {
       theme: CupertinoThemeData(
         primaryColor: CupertinoColors.systemPink,
       ),
-      home: DownloaderScreen(),
+      home: MainScreen(),
+    );
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  const MainScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoTabScaffold(
+      tabBar: CupertinoTabBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.cloud_download),
+            label: 'Download',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.music_note),
+            label: 'Player',
+          ),
+        ],
+      ),
+      tabBuilder: (context, index) {
+        return index == 0
+            ? const DownloaderScreen()
+            : const PlayerScreen();
+      },
     );
   }
 }
@@ -92,8 +120,11 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
 
       setState(() {
         _isLoading = false;
-        _status = 'Audio saved successfully to: $finalAudioPath';
+        _status = 'Audio saved successfully!';
       });
+
+      // Clear URL field after successful download
+      _urlController.clear();
 
       // Clean up temporary files
       File(videoPath).deleteSync();

@@ -21,10 +21,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _loadAudioFiles();
   }
 
-  Future<void> _playAudio(File file, AudioProvider audioProvider) async {
-    await audioProvider.playFile(file);
-  }
-
   Future<void> _loadAudioFiles() async {
     final files = await AudioManager.getAudioFiles();
     if (mounted) {
@@ -64,58 +60,109 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final audioProvider = Provider.of<AudioProvider>(context, listen: false);
-    
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: const Text('Music Player'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          child: _isRefreshing 
-              ? const CupertinoActivityIndicator()
-              : const Icon(CupertinoIcons.refresh),
-          onPressed: _isRefreshing ? null : _refreshAudioFiles,
-        ),
-      ),
-      child: ListView.builder(
-        itemCount: _audioFiles.length,
-        itemBuilder: (context, index) {
-          final file = _audioFiles[index];
-          final isPlaying = 
-              audioProvider.currentFile?.path == file.path && 
-              audioProvider.isPlaying;
-          
-          return Container(
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: CupertinoColors.systemGrey5,
-                  width: 0.5,
-                ),
-              ),
+    return Consumer<AudioProvider>(
+      builder: (context, audioProvider, _) {
+        return CupertinoPageScaffold(
+          navigationBar: CupertinoNavigationBar(
+            middle: const Text('Music Player'),
+            trailing: CupertinoButton(
+              padding: EdgeInsets.zero,
+              child: _isRefreshing 
+                  ? const CupertinoActivityIndicator()
+                  : const Icon(CupertinoIcons.refresh),
+              onPressed: _isRefreshing ? null : _refreshAudioFiles,
             ),
-            child: CupertinoListTile(
-              leading: Icon(
-                isPlaying
-                    ? CupertinoIcons.pause_circle_fill
-                    : CupertinoIcons.play_circle_fill,
-                color: CupertinoColors.systemPink,
-                size: 30,
-              ),
-              title: Text(_getFileName(file.path)),
-              trailing: CupertinoButton(
-                padding: EdgeInsets.zero,
-                child: const Icon(
-                  CupertinoIcons.delete,
+          ),
+          child: ListView.builder(
+            itemCount: _audioFiles.length,
+            itemBuilder: (context, index) {
+              final file = _audioFiles[index];
+              final isCurrentTrack = audioProvider.currentFile?.path == file.path;
+              final isPlaying = isCurrentTrack && audioProvider.isPlaying;
+              
+              return Dismissible(
+                key: Key(file.path),
+                background: Container(
+                  alignment: Alignment.centerRight,
                   color: CupertinoColors.systemRed,
+                  padding: const EdgeInsets.only(right: 16),
+                  child: const Icon(
+                    CupertinoIcons.delete,
+                    color: CupertinoColors.white,
+                  ),
                 ),
-                onPressed: () => _deleteAudio(file),
-              ),
-              onTap: () => _playAudio(file, audioProvider),
-            ),
-          );
-        },
-      ),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (direction) async {
+                  return await showCupertinoDialog<bool>(
+                    context: context,
+                    builder: (context) => CupertinoAlertDialog(
+                      title: const Text('Delete Track'),
+                      content: const Text('Are you sure you want to delete this track?'),
+                      actions: [
+                        CupertinoDialogAction(
+                          isDestructiveAction: true,
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Delete'),
+                        ),
+                        CupertinoDialogAction(
+                          isDefaultAction: true,
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                onDismissed: (direction) {
+                  _deleteAudio(file);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isCurrentTrack 
+                        ? CupertinoColors.systemGrey6 
+                        : null,
+                    border: const Border(
+                      bottom: BorderSide(
+                        color: CupertinoColors.systemGrey5,
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                  child: CupertinoListTile(
+                    leading: Icon(
+                      isPlaying
+                          ? CupertinoIcons.pause_circle_fill
+                          : CupertinoIcons.play_circle_fill,
+                      color: isCurrentTrack 
+                          ? CupertinoColors.systemPink
+                          : CupertinoColors.systemGrey,
+                      size: 30,
+                    ),
+                    title: Text(
+                      _getFileName(file.path),
+                      style: TextStyle(
+                        color: isCurrentTrack 
+                            ? CupertinoColors.systemPink
+                            : null,
+                        fontWeight: isCurrentTrack 
+                            ? FontWeight.bold
+                            : null,
+                      ),
+                    ),
+                    onTap: () async {
+                      if (isCurrentTrack) {
+                        await audioProvider.togglePlayPause();
+                      } else {
+                        await audioProvider.playFile(file);
+                      }
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

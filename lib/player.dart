@@ -77,8 +77,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
             itemCount: _audioFiles.length,
             itemBuilder: (context, index) {
               final file = _audioFiles[index];
-              final isCurrentTrack = audioProvider.currentFile?.path == file.path;
-              final isPlaying = isCurrentTrack && audioProvider.isPlaying;
+              final isCurrentTrack = audioProvider.isCurrentTrack(file);
               
               return Dismissible(
                 key: Key(file.path),
@@ -130,7 +129,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   ),
                   child: CupertinoListTile(
                     leading: Icon(
-                      isPlaying
+                      (isCurrentTrack && audioProvider.isPlaying)
                           ? CupertinoIcons.pause_circle_fill
                           : CupertinoIcons.play_circle_fill,
                       color: isCurrentTrack 

@@ -17,6 +17,8 @@ dependencies:
   ffmpeg_kit_flutter_full_gpl: ^6.0.3  # Use this instead of ffmpeg_kit_flutter
   just_audio: ^0.9.36
   provider: ^6.1.2
+  audio_service: ^0.18.12
+  audio_session: ^0.1.18
 
 dev_dependencies:
   flutter_test:
@@ -25,3 +27,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/default_art.png

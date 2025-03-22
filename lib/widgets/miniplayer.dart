@@ -133,7 +133,7 @@ class MiniPlayer extends StatelessWidget {
                             CupertinoIcons.backward_fill,
                             color: CupertinoColors.systemPink,
                           ),
-                          onPressed: () => audioProvider.playPrevious(),
+                          onPressed: () => audioProvider.audioHandler.skipToPrevious(),
                         ),
                         CupertinoButton(
                           padding: EdgeInsets.zero,
@@ -152,7 +152,7 @@ class MiniPlayer extends StatelessWidget {
                             CupertinoIcons.forward_fill,
                             color: CupertinoColors.systemPink,
                           ),
-                          onPressed: () => audioProvider.playNext(),
+                          onPressed: () => audioProvider.audioHandler.skipToNext(),
                         ),
                         // Repeat button
                         CupertinoButton(

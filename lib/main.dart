@@ -20,6 +20,9 @@ void main() async {
       androidNotificationChannelId: 'com.myapp.audio',
       androidNotificationChannelName: 'Audio Service',
       androidNotificationOngoing: true,
+      notificationColor: Color(0xFFFF0000),
+      fastForwardInterval: Duration(seconds: 10),
+      rewindInterval: Duration(seconds: 10),
     ),
   );
 

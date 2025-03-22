@@ -54,6 +54,6 @@
 	    <string>audio</string>
 	</array>
 	<key>NSAppleMusicUsageDescription</key>
-	<string>Need access to play audio</string>
+	<string>Needed for playing audio in background</string>
 </dict>
 </plist>

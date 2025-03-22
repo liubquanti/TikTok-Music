@@ -58,12 +58,12 @@ class MainScreen extends StatelessWidget {
         height: 60,
         items: const [
           BottomNavigationBarItem(
-        icon: Icon(CupertinoIcons.cloud_download),
-        label: 'Download',
+        icon: Icon(CupertinoIcons.music_note),
+        label: 'Програвач',
           ),
           BottomNavigationBarItem(
-        icon: Icon(CupertinoIcons.music_note),
-        label: 'Player',
+        icon: Icon(CupertinoIcons.cloud_download),
+        label: 'Завантаження',
           ),
         ],
       ),
@@ -74,8 +74,8 @@ class MainScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 60), // Add space for miniplayer
                 child: index == 0
-                    ? const DownloaderScreen()
-                    : const PlayerScreen(),
+                    ? const PlayerScreen()
+                    : const DownloaderScreen(),
               ),
               const Align(
                 alignment: Alignment.bottomCenter,
@@ -103,13 +103,13 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
 
   Future<void> _downloadAndConvertToAudio() async {
     if (_urlController.text.isEmpty) {
-      setState(() => _status = 'Please enter a TikTok URL');
+      setState(() => _status = 'Вставте посилання на TikTok відео');
       return;
     }
 
     setState(() {
       _isLoading = true;
-      _status = 'Fetching video info...';
+      _status = 'Отримання інформації про відео...';
     });
 
     try {
@@ -119,12 +119,12 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
       if (tiktokInfo?.data?.play == null) {
         setState(() {
           _isLoading = false;
-          _status = 'Failed to get video information';
+          _status = 'Не вдалося отримати інформацію про відео';
         });
         return;
       }
 
-      setState(() => _status = 'Downloading video...');
+      setState(() => _status = 'Завантаження відео...');
 
       final dio = Dio();
       final tempDir = await getTemporaryDirectory();
@@ -137,19 +137,19 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
         onReceiveProgress: (received, total) {
           if (total != -1) {
             final progress = (received / total * 100).toStringAsFixed(0);
-            setState(() => _status = 'Downloading: $progress%');
+            setState(() => _status = 'Завантаження: $progress%');
           }
         },
       );
 
-      setState(() => _status = 'Converting to audio...');
+      setState(() => _status = 'Перетворення на аудіо...');
 
       // Convert video to audio using FFmpeg
       await FFmpegKit.execute(
           '-i $videoPath -vn -acodec copy $audioPath'
       );
 
-      setState(() => _status = 'Saving to Music...');
+      setState(() => _status = 'Збереження до музики...');
 
       // Save to Music library
       final documentsDir = await getApplicationDocumentsDirectory();
@@ -158,7 +158,7 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
 
       setState(() {
         _isLoading = false;
-        _status = 'Audio saved successfully!';
+        _status = 'Трек успішно збережено!';
       });
 
       // Clear URL field after successful download
@@ -179,7 +179,7 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        middle: Text('TikTok Audio Downloader'),
+        middle: Text('Завантаження TikTok аудіо'),
       ),
       child: SafeArea(
         child: Padding(
@@ -189,7 +189,7 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
             children: [
               CupertinoTextField(
                 controller: _urlController,
-                placeholder: 'Enter TikTok video URL',
+                placeholder: 'Вставте посилання на TikTok відео',
                 padding: const EdgeInsets.all(16.0),
                 clearButtonMode: OverlayVisibilityMode.editing,
               ),
@@ -199,7 +199,7 @@ class _DownloaderScreenState extends State<DownloaderScreen> {
               else
                 CupertinoButton.filled(
                   onPressed: _downloadAndConvertToAudio,
-                  child: const Text('Download Audio'),
+                  child: const Text('Завантажити аудіо'),
                 ),
               const SizedBox(height: 20),
               Text(

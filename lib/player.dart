@@ -64,7 +64,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       builder: (context, audioProvider, _) {
         return CupertinoPageScaffold(
           navigationBar: CupertinoNavigationBar(
-            middle: const Text('Music Player'),
+            middle: const Text('Музичний програвач'),
             trailing: CupertinoButton(
               padding: EdgeInsets.zero,
               child: _isRefreshing 

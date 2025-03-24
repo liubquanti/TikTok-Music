@@ -19,6 +19,7 @@ dependencies:
   provider: ^6.1.2
   audio_service: ^0.18.12
   audio_session: ^0.1.18
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
@@ -29,3 +30,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/default_art.png
+
+flutter_launcher_icons:
+  ios: true
+  image_path: "assets/icon/icon.png"
